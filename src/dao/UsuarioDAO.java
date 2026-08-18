@@ -1,25 +1,25 @@
 package dao;
 
+import database.ConnectionProvider;
+
 import model.Usuario;
-import model.Usuario.TipoUsuario;
-import util.ConnectionFactory;
 
 import java.sql.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para operações de banco de dados relacionadas a Usuários
- */
 public class UsuarioDAO {
+    private final ConnectionProvider connectionProvider;
 
-    /**
-     * Insere um novo usuário no banco de dados
-     */
+    public UsuarioDAO(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
+    }
+
     public boolean inserir(Usuario usuario) {
         String sql = "INSERT INTO usuarios (nome, login, senha, tipo_usuario, ativo) VALUES (?, ?, ?, ?, ?)";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, usuario.getNome());
@@ -52,7 +52,7 @@ public class UsuarioDAO {
     public boolean atualizar(Usuario usuario) {
         String sql = "UPDATE usuarios SET nome = ?, login = ?, senha = ?, tipo_usuario = ?, ativo = ? WHERE id = ?";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, usuario.getNome());
@@ -77,7 +77,7 @@ public class UsuarioDAO {
     public boolean excluir(Integer id) {
         String sql = "DELETE FROM usuarios WHERE id = ?";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
@@ -96,7 +96,7 @@ public class UsuarioDAO {
     public Usuario buscarPorId(Integer id) {
         String sql = "SELECT * FROM usuarios WHERE id = ?";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
@@ -119,7 +119,7 @@ public class UsuarioDAO {
     public Usuario buscarPorLogin(String login) {
         String sql = "SELECT * FROM usuarios WHERE login = ?";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, login);
@@ -143,7 +143,7 @@ public class UsuarioDAO {
         List<Usuario> usuarios = new ArrayList<>();
         String sql = "SELECT * FROM usuarios ORDER BY nome";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -165,7 +165,7 @@ public class UsuarioDAO {
         List<Usuario> usuarios = new ArrayList<>();
         String sql = "SELECT * FROM usuarios WHERE nome LIKE ? ORDER BY nome";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, "%" + nome + "%");
@@ -188,7 +188,7 @@ public class UsuarioDAO {
     public Usuario autenticar(String login, String senhaHash) {
         String sql = "SELECT * FROM usuarios WHERE login = ? AND senha = ? AND ativo = TRUE";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, login);
@@ -212,7 +212,7 @@ public class UsuarioDAO {
     public int contarUsuariosAtivos() {
         String sql = "SELECT COUNT(*) FROM usuarios WHERE ativo = TRUE";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -236,7 +236,7 @@ public class UsuarioDAO {
         usuario.setNome(rs.getString("nome"));
         usuario.setLogin(rs.getString("login"));
         usuario.setSenha(rs.getString("senha"));
-        usuario.setTipoUsuario(TipoUsuario.fromString(rs.getString("tipo_usuario")));
+        usuario.setTipoUsuario(Usuario.TipoUsuario.fromString(rs.getString("tipo_usuario")));
         usuario.setAtivo(rs.getBoolean("ativo"));
 
         Timestamp dataCadastro = rs.getTimestamp("data_cadastro");

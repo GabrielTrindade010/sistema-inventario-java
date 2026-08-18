@@ -1,24 +1,23 @@
 package dao;
 
+import database.ConnectionProvider;
 import model.Produto;
-import util.ConnectionFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO para operações de banco de dados relacionadas a Produtos
- */
 public class ProdutoDAO {
+    private final ConnectionProvider connectionProvider;
 
-    /**
-     * Insere um novo produto no banco de dados
-     */
+    public ProdutoDAO(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
+    }
+
     public boolean inserir(Produto produto) {
         String sql = "INSERT INTO produtos (nome, categoria, quantidade, valor) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, produto.getNome());
@@ -50,7 +49,7 @@ public class ProdutoDAO {
     public boolean atualizar(Produto produto) {
         String sql = "UPDATE produtos SET nome = ?, categoria = ?, quantidade = ?, valor = ? WHERE id = ?";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, produto.getNome());
@@ -74,7 +73,7 @@ public class ProdutoDAO {
     public boolean excluir(Integer id) {
         String sql = "DELETE FROM produtos WHERE id = ?";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
@@ -93,7 +92,7 @@ public class ProdutoDAO {
     public Produto buscarPorId(Integer id) {
         String sql = "SELECT * FROM produtos WHERE id = ?";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
@@ -117,7 +116,7 @@ public class ProdutoDAO {
         List<Produto> produtos = new ArrayList<>();
         String sql = "SELECT * FROM produtos ORDER BY nome";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -139,7 +138,7 @@ public class ProdutoDAO {
         List<Produto> produtos = new ArrayList<>();
         String sql = "SELECT * FROM produtos WHERE nome LIKE ? ORDER BY nome";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, "%" + nome + "%");
@@ -163,7 +162,7 @@ public class ProdutoDAO {
         List<Produto> produtos = new ArrayList<>();
         String sql = "SELECT * FROM produtos WHERE categoria = ? ORDER BY nome";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, categoria);
@@ -187,7 +186,7 @@ public class ProdutoDAO {
         List<String> categorias = new ArrayList<>();
         String sql = "SELECT DISTINCT categoria FROM produtos ORDER BY categoria";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -208,7 +207,7 @@ public class ProdutoDAO {
     public int contarProdutos() {
         String sql = "SELECT COUNT(*) FROM produtos";
 
-        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
