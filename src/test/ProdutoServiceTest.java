@@ -1,44 +1,52 @@
 package test;
 
+import dao.ProdutoDAO;
+import database.ConnectionProvider;
+import database.MySqlConnectionProvider;
 import model.Produto;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import service.ProdutoService;
+
 import java.math.BigDecimal;
 
-public class ProdutoServiceTest {
-    public static void executar(ProdutoService produtoService) {
-        System.out.println("\n--- [TESTE] Produto Service ---");
+import static org.junit.jupiter.api.Assertions.*;
 
-        try {
-            Produto prod = new Produto("Monitor 27", "Monitores", 10, new BigDecimal("1200.00"));
-            boolean cadastrou = produtoService.cadastrarProduto(prod);
+class ProdutoServiceTest {
 
-            TestRunner.assertIsTrue(
-                    cadastrou && prod.getId() != null,
-                    "Produto cadastrado! ID: " + prod.getId(),
-                    "Falha ao cadastrar produto."
-            );
+    private ProdutoService produtoService;
 
-            if (prod.getId() != null) {
-                produtoService.ajustarEstoque(prod.getId(), 2, false);
-                Produto atualizado = produtoService.buscarPorId(prod.getId());
-                TestRunner.assertIsTrue(
-                        atualizado != null && atualizado.getQuantidade() == 8,
-                        "Ajuste de estoque OK. Nova quantidade: " + (atualizado != null ? atualizado.getQuantidade() : 0),
-                        "Falha no ajuste de estoque."
-                );
-            }
-        } catch (Exception e) {
-            TestRunner.reportarFalha("Erro no teste de Produto: " + e.getMessage());
-        }
+    @BeforeEach
+    void setUp() {
+        ConnectionProvider provider = new MySqlConnectionProvider();
+        ProdutoDAO produtoDAO = new ProdutoDAO(provider);
+        produtoService = new ProdutoService(produtoDAO);
+    }
 
-        try {
-            Produto invalido = new Produto("Erro", "Geral", 5, new BigDecimal("-10.00"));
+    @Test
+    @DisplayName("Deve cadastrar produto e ajustar estoque com sucesso")
+    void testFluxoProdutoEEstoque() {
+        Produto prod = new Produto("Teclado Teste", "Periféricos", 15, new BigDecimal("200.00"));
+
+        boolean cadastrou = produtoService.cadastrarProduto(prod);
+        assertTrue(cadastrou);
+        assertNotNull(prod.getId());
+
+        // Ajusta estoque (retira 5 unidades)
+        produtoService.ajustarEstoque(prod.getId(), 5, false);
+
+        Produto atualizado = produtoService.buscarPorId(prod.getId());
+        assertEquals(10, atualizado.getQuantidade(), "A quantidade em estoque deve ser reduzida para 10.");
+    }
+
+    @Test
+    @DisplayName("Deve recusar cadastro de produto com preço negativo")
+    void testCadastrarProdutoPrecoNegativo() {
+        Produto invalido = new Produto("Erro", "Geral", 5, new BigDecimal("-50.00"));
+
+        assertThrows(IllegalArgumentException.class, () -> {
             produtoService.cadastrarProduto(invalido);
-            TestRunner.reportarFalha("Permitiu preço negativo.");
-        } catch (IllegalArgumentException e) {
-            TestRunner.assertIsTrue(true, "Bloqueio de preço negativo OK: " + e.getMessage(), "");
-        } catch (Exception e) {
-            TestRunner.reportarFalha("Erro no teste de preço negativo: " + e.getMessage());
-        }
+        });
     }
 }

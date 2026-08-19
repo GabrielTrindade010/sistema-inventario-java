@@ -100,6 +100,14 @@ public class Produto {
         return quantidade < 10;
     }
 
+    public BigDecimal calcularValorComDesconto(BigDecimal percentualDesconto) {
+        if (percentualDesconto == null || percentualDesconto.compareTo(BigDecimal.ZERO) < 0 || percentualDesconto.compareTo(new BigDecimal("100")) > 0) {
+            throw new IllegalArgumentException("Percentual de desconto deve estar entre 0 e 100.");
+        }
+        BigDecimal fatorDesconto = BigDecimal.ONE.subtract(percentualDesconto.divide(new BigDecimal("100")));
+        return this.valor.multiply(fatorDesconto);
+    }
+
     @Override
     public String toString() {
         return "Produto{" +
